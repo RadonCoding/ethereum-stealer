@@ -1,6 +1,9 @@
 # Ethereum Stealer
 Generate random ethereum private keys and then drain funds if any.
 
+### License
+This project is licensed under the terms of the MIT license.
+
 ### How it works
 It generates random private keys / seeds and then takes drains funds from them
 
