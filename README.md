@@ -10,8 +10,9 @@ It generates random private keys / seeds and then takes drains funds from them
 ### How to use
 1. Open it in VS Code or your preferred IDE
 2. Goto `constants.rs` and replace the address with your own
-3. Make sure to change the `INFURA_PROJECT_ID` to your own
-4. Run (x64) `cargo build --release` or (x86) `cargo build --release --target=i686-pc-windows-msvc`
+3. Make sure to change the `ENDPOINT` to your own
+4. I recommend you to use a endpoint that doesn't rate limit you
+5. Run (x64) `cargo build --release` or (x86) `cargo build --release --target=i686-pc-windows-msvc`
 
 ### Contributing
 1. Fork it
