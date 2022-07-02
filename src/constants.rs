@@ -6,3 +6,6 @@ pub const ETHEREUM_ADDRESS: &'static str = "0x1DC20DB2985b14cA483071c29dC0eDdCbF
 
 // Wether or not to log info about generated wallets (affects performance)
 pub const ENABLE_LOG: bool = false;
+
+// Infura API requires a cooldown between requests if daily limit is exceeded
+pub const COOLDOWN: u64 = 1730;

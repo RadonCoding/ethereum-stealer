@@ -40,7 +40,7 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
     Ok(())
 }
 
-#[tokio::main(flavor = "multi_thread")]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let dst_addr = Address::from_str(constants::ETHEREUM_ADDRESS)?;
 
@@ -58,7 +58,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         generate_eth(dst_addr, &web3_con).await?;
         amount_generated = amount_generated.add(1);
 
-        // Infura API requires 1 second request cooldown if daily limit is exceeded :/
-        tokio::time::sleep(Duration::from_secs(1)).await;
+        tokio::time::sleep(Duration::from_millis(constants::COOLDOWN)).await;
     }
 }
