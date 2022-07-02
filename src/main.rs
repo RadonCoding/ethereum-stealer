@@ -1,7 +1,9 @@
 mod constants;
 mod eth_wallet;
 mod utils;
-use colored::Colorize;
+use ansi_term::Colour::Blue;
+use ansi_term::Colour::Green;
+use ansi_term::Colour::Red;
 use eth_wallet::Wallet;
 use std::{
     error::Error,
@@ -28,7 +30,7 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
     let mut transaction = eth_wallet::create_eth_transaction(dst_addr, wei_balance);
 
     if let Some(real_balance) = utils::estimate_gas(web3_con, &transaction).await {
-        println!("{}", "Valid wallet".bright_green());
+        println!("{}", Green.paint("Valid wallet"));
 
         transaction.value = real_balance;
 
@@ -40,7 +42,7 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
         stdout().flush()?;
         stdin().read(&mut [0u8])?;
     } else if constants::ENABLE_LOG {
-        println!("{}", "Invalid wallet".bright_red());
+        println!("{}", Red.paint("Invalid wallet"));
     }
 
     if constants::ENABLE_LOG {
@@ -50,7 +52,7 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
         println!("Block number: {}", &block_number);
         println!(
             "Wallet balance: {} ETH",
-            eth_balance.to_string().bright_blue()
+            Blue.paint(eth_balance.to_string())
         );
         println!();
     }
@@ -60,6 +62,13 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    match ansi_term::enable_ansi_support() {
+        Ok(()) => (),
+        Err(_) => {
+            println!("Failed to enable ANSI support");
+        }
+    }
+
     let dst_addr = Address::from_str(constants::ETHEREUM_ADDRESS)?;
 
     let web3_con = eth_wallet::establish_web3_connection(&constants::ENDPOINT).await?;
@@ -87,10 +96,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         amount_generated_clone.fetch_add(1, Ordering::Relaxed);
                     }
                     Err(err) => {
-                        println!("Error: {}", err.to_string().bright_red());
+                        println!("Error: {}", Red.paint(err.to_string()));
                     }
                 }
-                tokio::time::sleep(Duration::from_millis(1)).await;
+                tokio::time::sleep(Duration::from_millis(5)).await;
             }
         });
 
