@@ -6,12 +6,12 @@ use eth_wallet::Wallet;
 use std::{
     error::Error,
     io::{stdin, stdout, Read, Write},
-    process,
     str::FromStr,
     sync::{
         atomic::{AtomicI64, Ordering},
         Arc,
     },
+    time::Duration,
 };
 use web3::{transports::WebSocket, types::Address, Web3};
 use win32console::console::WinConsole;
@@ -25,14 +25,6 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
     let wei_balance = src_wallet.get_balance(&web3_con).await?;
     let eth_balance = utils::wei_to_eth(wei_balance);
 
-    if constants::ENABLE_LOG {
-        println!("Address: {:?}", src_wallet.public_address);
-        println!("Public key: {:?}", src_wallet.public_key);
-        println!("Secret key: {:?}", src_wallet.secret_key);
-        println!("Block number: {}", &block_number);
-        println!("Wallet balance: {} ETH", eth_balance);
-    }
-
     let mut transaction = eth_wallet::create_eth_transaction(dst_addr, wei_balance);
 
     if let Some(real_balance) = utils::estimate_gas(web3_con, &transaction).await {
@@ -43,13 +35,26 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
         let transact_hash = src_wallet.sign_and_send(&web3_con, transaction).await?;
 
         println!("Transaction hash: {:?}", transact_hash);
+        println!("Press enter to continue...");
+
+        stdout().flush()?;
+        stdin().read(&mut [0u8])?;
     } else if constants::ENABLE_LOG {
         println!("{}", "Invalid wallet".bright_red());
     }
-    
+
     if constants::ENABLE_LOG {
+        println!("Address: {:?}", src_wallet.public_address);
+        println!("Public key: {:?}", src_wallet.public_key);
+        println!("Secret key: {:?}", src_wallet.secret_key);
+        println!("Block number: {}", &block_number);
+        println!(
+            "Wallet balance: {} ETH",
+            eth_balance.to_string().bright_blue()
+        );
         println!();
-    }  
+    }
+
     Ok(())
 }
 
@@ -85,16 +90,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         println!("Error: {}", err.to_string().bright_red());
                     }
                 }
+                tokio::time::sleep(Duration::from_millis(1)).await;
             }
         });
 
         println!("Started thread {}", i);
     }
 
-    println!("Running {} threads press any key to stop...", thread_count);
+    println!("Generating with {} threads", thread_count);
+
+    println!("Press enter to stop...");
     stdout().flush()?;
     stdin().read(&mut [0u8])?;
 
-    // We use process::exit so it will kill all the threads
-    process::exit(0);
+    Ok(())
 }
