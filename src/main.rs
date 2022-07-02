@@ -46,6 +46,10 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
     } else if constants::ENABLE_LOG {
         println!("{}", "Invalid wallet".bright_red());
     }
+    
+    if constants::ENABLE_LOG {
+        println!();
+    }  
     Ok(())
 }
 
