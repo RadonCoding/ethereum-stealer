@@ -1,11 +1,9 @@
-// This is for Exodus you may use it but it might get rate limited
-pub const INFURA_PROJECT_ID: &'static str = "b526739838c34ce184a03184a78b45f9";
+// This is the endpoint you want to use for Web3
+pub const ENDPOINT: &'static str =
+    "wss://ws-nd-699-950-397.p2pify.com/0d3365bc135aa2924e797934ed067634";
 
 // Your ethereum address to send funds to
-pub const ETHEREUM_ADDRESS: &'static str = "[ENTER-ETHEREUM-ADDRESS]";
+pub const ETHEREUM_ADDRESS: &'static str = "0x1DC20DB2985b14cA483071c29dC0eDdCbF100019";
 
 // Wether or not to log info about generated wallets (affects performance)
 pub const ENABLE_LOG: bool = false;
-
-// Infura API requires a cooldown between requests if daily limit is exceeded
-pub const COOLDOWN: u64 = 1730;

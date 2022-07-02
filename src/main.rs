@@ -3,7 +3,16 @@ mod eth_wallet;
 mod utils;
 use colored::Colorize;
 use eth_wallet::Wallet;
-use std::{error::Error, ops::Add, str::FromStr, time::Duration};
+use std::{
+    error::Error,
+    io::{stdin, stdout, Read, Write},
+    process,
+    str::FromStr,
+    sync::{
+        atomic::{AtomicI64, Ordering},
+        Arc,
+    },
+};
 use web3::{transports::WebSocket, types::Address, Web3};
 use win32console::console::WinConsole;
 
@@ -44,20 +53,45 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
 async fn main() -> Result<(), Box<dyn Error>> {
     let dst_addr = Address::from_str(constants::ETHEREUM_ADDRESS)?;
 
-    let endpoint = format!(
-        "wss://mainnet.infura.io/ws/v3/{}",
-        constants::INFURA_PROJECT_ID
-    );
+    let endpoint = constants::ENDPOINT;
 
-    let web3_con = eth_wallet::establish_web3_connection(&endpoint).await?;
+    let amount_generated = Arc::new(AtomicI64::new(0));
 
-    let mut amount_generated = 0;
+    let thread_count = num_cpus::get();
 
-    loop {
-        WinConsole::set_title(format!("Amount generated: {}", amount_generated).as_str())?;
-        generate_eth(dst_addr, &web3_con).await?;
-        amount_generated = amount_generated.add(1);
+    for i in 0..thread_count {
+        let web3_con = eth_wallet::establish_web3_connection(&endpoint).await?;
+        let amount_generated_clone = amount_generated.clone();
 
-        tokio::time::sleep(Duration::from_millis(constants::COOLDOWN)).await;
+        tokio::spawn(async move {
+            loop {
+                WinConsole::set_title(
+                    format!(
+                        "Amount generated: {}",
+                        amount_generated_clone.load(Ordering::Relaxed)
+                    )
+                    .as_str(),
+                )
+                .unwrap();
+
+                match generate_eth(dst_addr, &web3_con).await {
+                    Ok(()) => {
+                        amount_generated_clone.fetch_add(1, Ordering::Relaxed);
+                    }
+                    Err(err) => {
+                        println!("Error: {}", err.to_string().bright_red());
+                    }
+                }
+            }
+        });
+
+        println!("Started thread {}", i);
     }
+
+    println!("Running {} threads press any key to stop...", thread_count);
+    stdout().flush()?;
+    stdin().read(&mut [0u8])?;
+
+    // We use process::exit so it will kill all the threads
+    process::exit(0);
 }
