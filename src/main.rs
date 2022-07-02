@@ -53,17 +53,16 @@ async fn generate_eth(dst_addr: Address, web3_con: &Web3<WebSocket>) -> Result<(
 async fn main() -> Result<(), Box<dyn Error>> {
     let dst_addr = Address::from_str(constants::ETHEREUM_ADDRESS)?;
 
-    let endpoint = constants::ENDPOINT;
-
+    let web3_con = eth_wallet::establish_web3_connection(&constants::ENDPOINT).await?;
     let amount_generated = Arc::new(AtomicI64::new(0));
 
     let thread_count = num_cpus::get();
 
     for i in 0..thread_count {
-        let web3_con = eth_wallet::establish_web3_connection(&endpoint).await?;
+        let web3_con_clone = web3_con.clone();
         let amount_generated_clone = amount_generated.clone();
 
-        tokio::spawn(async move {
+        tokio::task::spawn(async move {
             loop {
                 WinConsole::set_title(
                     format!(
@@ -74,7 +73,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 )
                 .unwrap();
 
-                match generate_eth(dst_addr, &web3_con).await {
+                match generate_eth(dst_addr, &web3_con_clone).await {
                     Ok(()) => {
                         amount_generated_clone.fetch_add(1, Ordering::Relaxed);
                     }
